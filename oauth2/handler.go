@@ -365,15 +365,16 @@ func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request, _ httprout
 }
 
 func (h *Handler) redirectToConsent(w http.ResponseWriter, r *http.Request, authorizeRequest fosite.AuthorizeRequester) error {
-	schema := "https"
-	if h.ForcedHTTP {
-		schema = "http"
-	}
-
 	// Error can be ignored because a session will always be returned
 	cookie, _ := h.CookieStore.Get(r, consentCookieName)
 
-	challenge, err := h.Consent.IssueChallenge(authorizeRequest, schema+"://"+r.Host+r.URL.String(), cookie)
+	authUrl, err := url.Parse(h.Issuer + AuthPath)
+	if err != nil {
+		return err
+	}
+	authUrl.RawQuery = r.URL.RawQuery
+
+	challenge, err := h.Consent.IssueChallenge(authorizeRequest, authUrl.String(), cookie)
 	if err != nil {
 		return err
 	}
