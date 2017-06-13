@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/url"
 
@@ -368,9 +369,17 @@ func (h *Handler) redirectToConsent(w http.ResponseWriter, r *http.Request, auth
 	// Error can be ignored because a session will always be returned
 	cookie, _ := h.CookieStore.Get(r, consentCookieName)
 
+	host, _, err := net.SplitHostPort(r.Host)
+	if err != nil {
+		host = r.Host
+	}
+
 	authUrl, err := url.Parse(h.Issuer + AuthPath)
 	if err != nil {
 		return err
+	}
+	if authUrl.Host != host {
+		h.L.Warnln("Host from auth request does not match issuer host. The consent return redirect may fail.")
 	}
 	authUrl.RawQuery = r.URL.RawQuery
 
