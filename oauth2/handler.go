@@ -379,7 +379,10 @@ func (h *Handler) redirectToConsent(w http.ResponseWriter, r *http.Request, auth
 		return err
 	}
 	if authUrl.Host != host {
-		h.L.Warnln("Host from auth request does not match issuer host. The consent return redirect may fail.")
+		h.L.WithFields(logrus.Fields{
+			"request_host": host,
+			"issuer_host":  authUrl.Host,
+		}).Warnln("Host from auth request does not match issuer host. The consent return redirect may fail.")
 	}
 	authUrl.RawQuery = r.URL.RawQuery
 
